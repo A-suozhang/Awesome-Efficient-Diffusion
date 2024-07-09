@@ -5,99 +5,197 @@
 
 > A curated list of methods that focus on improving the efficiency of diffusion models
 
-### Index
+### Updates
 
-- Algorithms:
-    - 0. Basics
-    - 1. Arch-level Compression
-    - 2. Time-step-level Compression
-    - 3. Data-precision-level Compression
-    - 4. Input-level Compression
-    - 5. Efficient Tuning
-- Applications:
-    - a. Personalization
-    - b. Controllable Generation
-    - c. Multi-Media Generation
-- Deployment:
-    - Ⅰ. GPU
-    - Ⅱ. Mobile
-    - Ⅲ. Miscellaneous Devices
+> I‘m trying to update this list weekly (every monday morning) from my personal knowledge stack, and collect each conference's proceedings. If you find this repo useful, it would be kind to consider **★staring** it or **☛contributing to** it. 
 
-### Design Principles
+- [2024/07/08] Reorganizing the catalogs
+- [2024/07/09] (ING) Filling in existing surveys 
 
-- **Simple**: Summarize structural points as paper description, omit the details (dont get lost in low information texts)
-- **Quantitative**: give the relative speedup for certain method (how far have we come?)
+### Catalogs
 
-# 🔬 Algotithms
+- [0. Basics](#basics)
+    - [0.1 Diffusion Formulations](#diffusion-formulation)
+    - [0.2 Solvers](#solvers)
+    - [0.3 Models](#models)
+        - [0.3.1 Key Components](#key-components)
+        - [0.3.2 Open-sourced Models](#open-sourced-models)
+        - [0.3.3 Closed-source Models/Products](#closed-source-models)
+    - [0.4 Datasets for Train/Eval](#datasets)
+        - [0.4.1 Unconditional](#unconditional)
+        - [0.4.2 Unconditional](#class-conditioned)
+        - [0.4.3 Text-to-Image](#text-to-image)
+    - [0.5 Evaluation Metrics](#evaluation-metrics)
+    - [0.6 Miscellaneous](#miscellaneous)
+        - [0.6.1 Video Generation](#video-generation)
+        - [0.6.2 Customized Generation](#customized-generation)
+        - [0.6.2 Generating Complex Scene](#generate-complex-scene)
 
-## 0. Basics
+- [1. Algorithm-level](#algorithms)
+    - [1.1 Timestep Reduction](#timestep-reduction)
+        - [1.1.1 Efficient Solver](#efficient-solver)
+        - [1.1.2 Timestep Distillation](#timestep-distillation)
+    - [1.2 Model Architecture (Weight Reduction)](#architecture-level-compression)
+        - [1.2.1 Prune/Distillation](#pruning)
+        - [1.2.2 Adaptive Architecture](#adaptive-architecture)
+    - [1.3 Token-level Compression](#token-level-compression)
+        - [1.3.1 Token Reduction](#token-reduction)
+        - [1.3.2 Patched Inference](#patched-inference)
+    - [1.4 Model Quantization](#model-quantization)
+    - [1.5 Efficient Tuning](#efficient-tuning)
+         - [1.5.1 Low Rank](#token-reduction)
 
-> Some basic diffusion model papers, specifying the preliminaries. Noted that the main focus of this awesome list is the efficient method part. Therefore it only contains minimum essential preliminary studies you need to know before acclerating diffusion. 
+- [2. System-level](#systems)
+    - [2.1 GPU](#gpu)
+    - [2.2 Mobile](#mobile)
 
-> The [[🤗 Huggingface Diffuser Doc](https://huggingface.co/docs/diffusers/index)] is also a good way of getting started with diffusion
+# Basics
 
-### 0.1. Methods (Variants/Techniques)
 
-> some famous diffusion models (e.g., DDPM, Stable-Diffusion), and key techniques
+### Resources
 
-- [[ICML15 - **DPM**](https://arxiv.org/abs/1503.03585)] : "Deep Unsupervised Learning using Nonequilibrium Thermodynamics"; 
-    - Pre-DDPM, early diffusion model
+> Recommended introductory learning materials
 
-- [[NeurIPS20 - **DDPM**](https://arxiv.org/abs/2006.11239)]: "Denoising Diffusion Probabilistic Models"
-    - Discrete time diffusion model
+- [David Saxton's Tutorial on Diffusion](https://saxton.ai/diffusion/00_index.html)
+- [Song Yang's Post: Generative Modeling by Estimating Gradients of the Data Distribution](https://yang-song.net/blog/2021/score/)
+- [EfficientML Course, MIT, Han Song, The Diffusion Chapter](https://www.dropbox.com/scl/fi/q8y9ap7mlucmiimyh3zl5/lec16.pdf?rlkey=6wx4z3pnhic8pq0oju8ro3qzr&e=1&dl=0)
 
-- [[ICLR21 - **SDE**](https://arxiv.org/abs/2011.13456)]: "Score-Based Generative Modeling through Stochastic Differential Equations";
+---
+
+- [Applications: Huggingface Diffuser Doc](https://huggingface.co/docs/diffusers/index)
+
+## Diffusion Formulation
+
+> formulations of diffusion, development of theory
+
+- [**DPM**] "Deep Unsupervised Learning using Nonequilibrium Thermodynamics"; 
+    - Early advance of diffusion formulation
+    - 2015/03 | ICML15 | [[Paper](https://arxiv.org/abs/1503.03585)]
+
+
+- [**DDPM**]  "Denoising Diffusion Probabilistic Models"; 
+    - 2020/06 | NeurIPS20 | [[Paper](https://arxiv.org/abs/2006.11239)]
+    - The discrete time diffusion
+
+- [**SDE-based Diffusion**]
+    - 2020/11 | ICLR21 | [[Paper](https://arxiv.org/abs/2011.13456)]
     - Continuous time Neural SDE formulation of diffusion
 
-- [[Arxiv2105 -  **Classifier-Guidance**](https://arxiv.org/abs/2105.05233)]: "Diffusion Models Beat GANs on Image Synthesis"; 
-    - Conditional generation with classifier guidance
+---
 
-- [[CVPR22 -  **Stable-Diffusion**](2112.10752)]: "High-Resolution Image Synthesis with Latent Diffusion Models";
-    - Latent space diffusion (with VAE)
-    - Latent class guidance (with CLIP embedding fed into cross_attn)
-    - [[📎 Code:CompVis/stable-diffusion](https://github.com/CompVis/stable-diffusion)]
+> how to introduce control signal
 
-- [[TechReport-2204 - **DeepFlyoid-IF**](https://github.com/deep-floyd/IF)] ;
-    - following [[NeurIPS22 - **Imagen**](https://arxiv.org/abs/2205.11487)]: “Photorealistic Text-to-Image Diffusion Models
-with Deep Language Understanding”;
-    - Larger Language Model (T5 over CLIP)
-    - Pixel-space Diffusion
-    - Diffusion for SR
-    - [[📎 Code: sdeep-floyd/IF](https://github.com/deep-floyd/IF)]
+- [**Classifier-based Guidance**] "Deep Unsupervised Learning using Nonequilibrium Thermodynamics"; 
+    - 2021/05 | Arxiv2105 | [[Paper](https://arxiv.org/abs/2105.05233)]
+    - Introduce control signal through classifier
 
-### 0.2. Architecture Components
+- [**Classifier-free Guidance (CFG)**] "Deep Unsupervised Learning using Nonequilibrium Thermodynamics"; 
+    - 2022/07 | NeurIPS 2021 Workshop | [[Paper](https://arxiv.org/abs/2207.12598)]
+    - Introduce CFG, jointly train a conditional and an unconditional diffusion model, and combine them
 
-- *"Vision-Language Model"*
-    - [CLIP](https://arxiv.org/abs/2103.00020), [T5](https://arxiv.org/abs/1910.10683)
+- [**LDM**] "High-Resolution Image Synthesis with Latent Diffusion Models";
+    - 2021/12 | CVPR22 | [[Paper](https://arxiv.org/abs/2112.10752)] | [[Code](https://github.com/CompVis/stable-diffusion)]
+    - Text-to-image conditioning with cross attention
+    - Latent space diffusion model
+
+
+## Solvers
+
+- [**DDIM**]: "Denoising Diffusion Implicit Models";
+    - 2020/10 | ICLR21 | [[Paper](https://arxiv.org/abs/2010.02502)]
+    - determinstic sampling, skip timesteps
+
+- [**DPMSolver**]: "DPM-Solver: A Fast ODE Solver for Diffusion Probabilistic Model Sampling in Around 10 Steps";
+    - 2022/06 | NeurIPS22 | [[Paper](https://arxiv.org/abs/2206.00927)]
+    - utilize the sub-linear property of ODE solving, converge in 10-20 steps 
+    
+- [**DPMSolver++**]: "DPM-Solver++: Fast Solver for Guided Sampling of Diffusion Probabilistic Models";
+    - 2022/11 | Arxiv | [[Paper](https://arxiv.org/abs/2211.01095)]
+    - multi-order ODE, faster convergence
+
+## Models
+
+### Key Components
+
+> Text_encoder
+
+- [**CLIP**] "Learning Transferable Visual Models From Natural Language Supervision";
+    - 2021/03 | Arxiv | [[Paper](https://arxiv.org/abs/2103.00020)]
+    - *Containing Operations:*
+        - Self-Attention (Cross-Attention)
+        - FFN (FC)
+        - LayerNorm (GroupNorm)]
+
+- [**T5**] "Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer";
+    - 2019/10 | Arxiv | [[Paper](https://arxiv.org/abs/1910.10683)]
     - *Containing Operations:*
         - Self-Attention (Cross-Attention)
         - FFN (FC)
         - LayerNorm (GroupNorm)
-- *Diffusion Model* (also sometimes used for SuperReoslution)
-    - [U-Net](https://arxiv.org/abs/1505.04597)
+
+Summarization of adopted text encoders for large text-to-image models from [Kling-AI Technical Report](https://github.com/Kwai-Kolors/Kolors/blob/master/imgs/Kolors_paper.pdf)
+
+![](https://github.com/A-suozhang/MyPicBed/raw/master/img/20240709140445.png)
+
+
+
+> VAE (for latent-space)
+
+- [**VAE**] "Tutorial on Variational Autoencoders";
+    - 2016/06 | Arxiv | [[Paper](https://arxiv.org/abs/1606.05908)]
+    - *Containing Operations:*
+        - Conv
+        - DeConv (ConvTransposed, Interpolation)
+
+> Diffusion Network
+
+- [**U-Net**] "U-Net: Convolutional Networks for Biomedical Image Segmentation";
+    - 2015/05 | Arxiv | [[Paper](https://arxiv.org/abs/1505.04597)]
     - *Containing Operations:*
         - Conv
         - DeConv (ConvTransposed, Interpolation)
         - Low-range Shortcut Connection
-- *Encoder-Decoder* (for latent-space diffusion)
-    - [VAE](https://arxiv.org/abs/1606.05908) (in latent diffusion)
-    - *Containing Operations:*
-        - Conv
-        - DeConv (ConvTransposed, Interpolation)
 
-### 0.3. Solver (Sampler)
+- DiT
 
-- [[ICLR21 - **DDIM**](https://arxiv.org/abs/2010.02502)]: "Denoising Diffusion Implicit Models";
-    - determinstic sampling, 
-    - reduce time-steps
+> UpScaler
 
-- [[NeurIPS22 - **DPMSolver**](https://arxiv.org/abs/2206.00927)]: "DPM-Solver: A Fast ODE Solver for Diffusion Probabilistic Model Sampling in Around 10 Steps";
-    - follow-up work: [[Arxiv2211 - **DPMSolver++**](https://arxiv.org/abs/2211.01095)]: "DPM-Solver++: Fast Solver for Guided Sampling of Diffusion Probabilistic Models";
-    - multi-order ODE, faster convergence
 
- - ![](https://img.shields.io/static/v1?message=todo&color=red)
 
-### 0.4. Evaluation Metric
+### Open-sourced Models
+
+
+- [**Imagen**]: "Photorealistic Text-to-Image Diffusion Models with Deep Language Understanding”;
+    - 2022/05 | NeurIPS22 | [[Paper](https://arxiv.org/abs/2205.11487)]
+
+- [**DeepFlyoid-IF**] "DeepFlyod-IF";
+    - 2022/04 | Arxiv | Stability.AI | [[Technical Report](https://github.com/deep-floyd/IF)] | [[Code](https://github.com/deep-floyd/IF)]
+    - Larger Language Model (T5 over CLIP) | Pixel-space Diffusion | Diffusion for SR
+
+### Closed-source Models
+
+
+
+
+
+---
+
+
+
+## Datasets
+
+### Unconditional
+
+
+### Class-Conditioned
+
+- **CIFAR-10**: 
+
+- **CelebA**:
+
+### Text-to-image
+
+## Evaluation Metrics
 
 - [InceptionDistance](https://huggingface.co/docs/diffusers/v0.16.0/en/conceptual/evaluation#quantitative-evaluation)
     - **Fréchet Inception Distance**: evaluting 2 **set** of image, intermediate feature distance of InceptionNet between reference image and generated image, lower the better
@@ -114,90 +212,96 @@ with Deep Language Understanding”;
 
 - [Other Metrics (Refering from Schuture/Benchmarking-Awesome-Diffusion-Models)](https://github.com/Schuture/Benchmarking-Awesome-Diffusion-Models)
 
- - ![](https://img.shields.io/static/v1?message=todo&color=red)
+## Miscellaneous
 
-### 0.5. Datasets & Settings
-
-#### 0.5.1 Unconditional Generation
-
-#### 0.5.2 Text-to-Image Generation
-
-- **CIFAR-10**: 
-
-- **CelebA**:
-#### 0.5.3 Image/Depth-to-Image Generation
-
-- ![](https://img.shields.io/static/v1?message=todo&color=red)
+### Video Generation
 
 
+### Customized Generation
 
-## 1. Arch-level compression
 
-> reduce the diffusion model cost (the repeatedly inference u-net) with  *pruning* / *neural architecture search (nas)* techniques
+### Generate Complex Scene
 
-- [[Arxiv2305](https://arxiv.org/abs/2305.10924)] "Structural Pruning for Diffusion Models";
-    - [Code](https://github.com/VainF/Diff-Pruning)
 
-## 2. Timestep-level Compression
+# Algorithm-level
+
+## Timestep Reduction
 
 > reduce the timestep (the number of u-net inference)
 
-### 2.1 Improved Sampler
 
-> Improved sampler, faster convergence, less timesteps
+### Efficient Solver
 
-- [[ICLR21 - **DDIM**](https://arxiv.org/abs/2010.02502)]: "Denoising Diffusion Implicit Models";
-    - **📊 典型结果**：50~100 Steps -> 10~20 Steps with moderate perf. loss
-- [[NeurIPS22 - **DPMSolver**](https://arxiv.org/abs/2206.00927)]: "DPM-Solver: A Fast ODE Solver for Diffusion Probabilistic Model Sampling in Around 10 Steps";
-    - **📊 典型结果**：NFE(num of unet forward)=10 achieves similar performance with DDIM NFE=100
-### 2.2 Improved Training 
+- [**DDIM**]: "Denoising Diffusion Implicit Models";
+    - 2021/10 | ICLR21 | [[Paper](https://arxiv.org/abs/2010.02502)]
+    - **📊 Key results**: 50~100 Steps -> 10~20 Steps with moderate performance loss
 
-> Distillation/New Scheme
+- [**DPM-Solver**]: "DPM-Solver: A Fast ODE Solver for Diffusion Probabilistic Model Sampling in Around 10 Steps";
+    - 2022/06 | NeurIPS | [[Paper](https://arxiv.org/abs/2206.00927)]
+    - **📊 Key results**: NFE (number of U-Net forward) = 10 achieves similar performance with DDIM NFE = 100
+### Timestep Distillation
 
+- [**Catch-Up Distillation**]: "Catch-Up Distillation: You Only Need to Train Once for Accelerating Sampling";
+    - 2023/05 | Arxiv2305 | [[Paper](https://arxiv.org/abs/2305.10769)]
 
-- [[Arxiv2305 - **CatchUpDistillation**](https://arxiv.org/abs/2305.10769)]: "Catch-Up Distillation: You Only Need to Train Once for Accelerating Sampling";
-
-- [[ICML23 - **ReDi**](https://arxiv.org/abs/2302.02285)]: "ReDi: Efficient Learning-Free Diffusion Inference via Trajectory Retrieval";
-    - Skip intemediate steps:
+- [**ReDi**]: "ReDi: Efficient Learning-Free Diffusion Inference via Trajectory Retrieval";
+    - Skip intermediate steps:
     - Retrieval: find similar partially generated scheduling in early stage
+    - 2023/02 | ICML23 | [[Paper](https://arxiv.org/abs/2302.02285)]
 
-- [[Arxiv2303 - **Consistency Model**](https://arxiv.org/pdf/2303.01469.pdf)]: "Consistency Models";
+- [**Consistency Model**]: "Consistency Models";
     - New objective: consistency based
+    - 2023/03 | Arxiv2303 | [[Paper](https://arxiv.org/pdf/2303.01469.pdf)]]
 
+## Architecture-level Compression
 
+> reduce the diffusion model cost (the repeatedly inference u-net) with  *pruning* / *neural architecture search (nas)* techniques
 
-## 3. Data-precision-level Compression
+### Pruning
 
-> quantization & low-bit inference/training
+- [**Structural Pruning**]: "Structural Pruning for Diffusion Models";
+    - 2023/05 | Arxiv2305 | [[Paper](https://arxiv.org/abs/2305.10924)] [[Code](https://github.com/VainF/Diff-Pruning)]
 
-- [[Arxiv2305 - **PTQD**](https://arxiv.org/abs/2305.10657)]: "PTQD: Accurate Post-Training Quantization for Diffusion Models";
+### Adaptive Architecture
 
-- [[Arxiv2304 - **BiDiffusion**](https://arxiv.org/abs/2304.04820)] "Binary Latent Diffusion"; 
+> adaptive skip part of the architecture across timesteps
 
+## Token-level Compression  
 
-
-
-
-## 4. Input-level Compression
-
-### 4.1 Adaptive Inference
+### Token Reduction
 
 > save computation for different sample condition (noise/prompt/task)
 
-- [[Arxiv2304 - **ToMe**](https://arxiv.org/abs/2303.17604)]: "Token Merging for Fast Stable Diffusion";
-### 4.2 Patched Inference
+- [**ToMe**]: "Token Merging for Fast Stable Diffusion";
+    - 2023/03 | Arxiv2304 | [[Paper](https://arxiv.org/abs/2303.17604)] [[Code](https://github.com/dbolya/tomesd)]
+
+### Patched Inference
 
 > reduce the processing resolution
 
-- [[Arxiv2304 - **PatchDiffusion**](https://arxiv.org/abs/2304.12526)]: "Patch Diffusion: Faster and More Data-Efficient Training of Diffusion Models"
+- [**PatchDiffusion**]: "Patch Diffusion: Faster and More Data-Efficient Training of Diffusion Models";
+    - 2023/04 | NeurIPS23 | [[Paper](https://arxiv.org/abs/2304.12526)]
 
-- [[CVPR23W - **MemEffPatchGen**](https://arxiv.org/abs/2304.07087)]: "Memory Efficient Diffusion Probabilistic Models via Patch-based Generation";
+- [**MemEffPatchGen**]: "Memory Efficient Diffusion Probabilistic Models via Patch-based Generation";
+    - 2023/04 | CVPR23W | [[Paper](https://arxiv.org/abs/2304.07087)]  
+## Model Quantization
 
-## 5. Efficient Tuning
+> quantization & low-bit inference/training
 
-- [[Arxiv2304 - **DiffFit**](https://arxiv.org/abs/2304.06648)]: "DiffFit: Unlocking Transferability of Large Diffusion Models via Simple Parameter-Efficient Fine-Tuning"
+- [**PTQD**]: "PTQD: Accurate Post-Training Quantization for Diffusion Models";
+    - 2023/05 | NeurIPS23 | [[Paper](https://arxiv.org/abs/2305.10657)]
 
-- [[Arxiv2303 - **ParamEffTuningSummary**](https://arxiv.org/abs/2303.18181)]: "A Closer Look at Parameter-Efficient Tuning in Diffusion Models";
+- [**BiDiffusion**]: "Binary Latent Diffusion";
+    - 2023/04 | Arxiv2304 | [[Paper](https://arxiv.org/abs/2304.04820)]
+
+## Efficient Tuning
+
+- [**DiffFit**]: "DiffFit: Unlocking Transferability of Large Diffusion Models via Simple Parameter-Efficient Fine-Tuning";
+    - 2023/04 | Arxiv2304 | [[Paper](https://arxiv.org/abs/2304.06648)]
+
+- [**ParamEffTuningSummary**]: "A Closer Look at Parameter-Efficient Tuning in Diffusion Models";
+    - 2023/03 | Arxiv2303 | [[Paper](https://arxiv.org/abs/2303.18181)]
+
 ### 5.1. Low-Rank 
 
 > The LORA family
@@ -205,30 +309,21 @@ with Deep Language Understanding”;
 
 
 
-# 🖨 Applications
+# System-level
 
-## a. Personalization
+## GPU
 
+## Mobile
 
-## b. Controllable Generation
+- [**SnapFusion**]: "SnapFusion: Text-to-Image Diffusion Model on Mobile Devices within Two Seconds";
+    - Platform: iPhone 14 Pro, 1.84s
+    - Model Evolution: 3.8x fewer parameters compared to SD-V1.5
+    - Step Distillation into 8 steps
+    - 2023/06 | Arxiv2306 | [[Paper](http://arxiv.org/abs/2306.00980)]
 
+---
 
-## c. Multi-modal Generation
-
-# 🔋 Deployments
-
-## Ⅰ. GPU
-
-## Ⅱ. Mobile
-
-- [[Arxiv2306 - **SnapFusion**](http://arxiv.org/abs/2306.00980)]: "SnapFusion: Text-to-Image Diffusion Model on Mobile Devices within Two Seconds";
-    - Platform: Iphone 14 Pro, 1.84s
-    - Model Evolution: 3.8x less param compared with SD-V1.5
-    - Step Distilaltion into 8 steps
-
-## Ⅲ. Miscellaneous Devices
-
-# Related
+# Related Resources
 
 - [heejkoo/Awesome-Diffusion-Models](https://github.com/heejkoo/Awesome-Diffusion-Models)
 - [awesome-stable-diffusion/awesome-stable-diffusion](https://github.com/awesome-stable-diffusion/awesome-stable-diffusion)
